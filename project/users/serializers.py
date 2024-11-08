@@ -4,6 +4,8 @@ from django.contrib.auth.hashers import make_password
 from .models import User
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    username_field = 'nickname'
+
     @classmethod
     def get_token(cls, user):
         token = super().get_token(user)
