@@ -3,15 +3,6 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, Toke
 from django.contrib.auth.hashers import make_password
 from .models import User
 
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ['id', 'nickname', 'created_at', 'updated_at']
-
-    def create(self, validated_data):
-        validated_data['password'] = make_password(validated_data['password'])
-        return super().create(validated_data)
-
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):
@@ -21,3 +12,17 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 class TokenRefreshSerializer(TokenRefreshSerializer):
     pass
+
+class RegisterSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'nickname', 'password']
+
+    def create(self, validated_data):
+        validated_data['password'] = make_password(validated_data['password'])
+        return User.objects.create(**validated_data)
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'nickname', 'created_at', 'updated_at']
