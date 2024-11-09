@@ -13,5 +13,5 @@ class RecommendedMissionViewSet(viewsets.ViewSet):
         # 30개의 미션 중 무작위로 5개 선택
         missions = Mission.objects.all()
         random_missions = random.sample(list(missions), 5)
-        serializer = MissionSerializer(random_missions, many=True)
+        serializer = RecommendedMissionSerializer(random_missions, many=True)
         return Response(serializer.data)
