@@ -1,14 +1,15 @@
 from rest_framework import serializers
-from .models import Group, Mission
-
-class MissionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Mission
-        fields = ['id', 'mission']
+from .models import Group, RecommendedMission
+from users.serializers import UserSerializer  
 
 class GroupSerializer(serializers.ModelSerializer):
-    missions = MissionSerializer(many=True, read_only=True)
+    group_leader = UserSerializer(read_only=True)  
 
     class Meta:
         model = Group
-        fields = ['id', 'name', 'code', 'missions']
+        fields = ['id', 'name', 'code', 'mission', 'group_leader']  
+
+class RecommendedMissionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RecommendedMission
+        fields = ['id', 'text']

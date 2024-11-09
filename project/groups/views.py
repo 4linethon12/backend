@@ -1,7 +1,7 @@
 from rest_framework import viewsets
 from rest_framework.response import Response
-from .models import Group, Mission
-from .serializers import GroupSerializer, MissionSerializer
+from .models import Group, RecommendedMission
+from .serializers import GroupSerializer, RecommendedMissionSerializer
 import random
 
 class GroupViewSet(viewsets.ModelViewSet):
@@ -13,5 +13,5 @@ class RecommendedMissionViewSet(viewsets.ViewSet):
         # 30개의 미션 중 무작위로 5개 선택
         missions = Mission.objects.all()
         random_missions = random.sample(list(missions), 5)
-        serializer = MissionSerializer(random_missions, many=True)
+        serializer = RecommendedMissionSerializer(random_missions, many=True)
         return Response(serializer.data)
