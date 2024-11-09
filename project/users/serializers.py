@@ -47,7 +47,18 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         return data
 
 class TokenRefreshSerializer(TokenRefreshSerializer):
-    pass
+    def validate(self, attrs):
+        data = super().validate(attrs)
+
+        access_token = self.token_class(data['access'])
+        access_expire = datetime.fromtimestamp(access_token.payload['exp']).strftime('%Y-%m-%d %H:%M:%S')
+
+        return {
+            'access': {
+                'token': data['access'],
+                'expires_at': access_expire
+            }
+        }
 
 class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
