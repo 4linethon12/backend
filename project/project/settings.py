@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'corsheaders',
     'rest_framework',
+    'rest_framework_simplejwt',
     'users',
     'groups',
     'manito',
@@ -61,9 +62,9 @@ MIDDLEWARE = [
 # Django REST Framework 설정
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
         'rest_framework.authentication.BasicAuthentication',
         'rest_framework.authentication.SessionAuthentication',
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
@@ -73,6 +74,8 @@ REST_FRAMEWORK = {
 }
 
 ROOT_URLCONF = 'project.urls'
+
+AUTH_USER_MODEL = 'users.User'
 
 TEMPLATES = [
     {
