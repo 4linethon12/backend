@@ -48,17 +48,20 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 class TokenRefreshSerializer(TokenRefreshSerializer):
     def validate(self, attrs):
-        data = super().validate(attrs)
+        try:
+            refresh = RefreshToken(attrs['refresh'])
 
-        access_token = self.token_class(data['access'])
-        access_expire = datetime.fromtimestamp(access_token.payload['exp']).strftime('%Y-%m-%d %H:%M:%S')
-
-        return {
-            'access': {
-                'token': data['access'],
-                'expires_at': access_expire
+            # 새로운 access 토큰 생성
+            data = {
+                'access': {
+                    'token': str(refresh.access_token),
+                    'expires_at': datetime.fromtimestamp(refresh.access_token.payload['exp']).strftime(
+                        '%Y-%m-%d %H:%M:%S')
+                }
             }
-        }
+            return data
+        except Exception as e:
+            raise serializers.ValidationError('유효하지 않은 토큰입니다')
 
 class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
