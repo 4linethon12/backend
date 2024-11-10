@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'users',
     'groups',
     'manito',
+    'drf_yasg',
 ]
 
 MIDDLEWARE = [
