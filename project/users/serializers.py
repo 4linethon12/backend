@@ -1,9 +1,13 @@
+import logging
 from datetime import datetime
 
 from rest_framework import serializers
+from rest_framework_simplejwt.tokens import TokenError, RefreshToken
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenRefreshSerializer
 from django.contrib.auth.hashers import make_password
 from .models import User
+
+logger = logging.getLogger(__name__)
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     username_field = User.USERNAME_FIELD
@@ -49,9 +53,13 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 class TokenRefreshSerializer(TokenRefreshSerializer):
     def validate(self, attrs):
         try:
-            refresh = RefreshToken(attrs['refresh'])
+            # refresh token 문자열을 가져옵니다
+            refresh_token = attrs['refresh']
 
-            # 새로운 access 토큰 생성
+            # RefreshToken 객체를 생성합니다
+            refresh = RefreshToken(refresh_token)
+
+            # 새로운 액세스 토큰을 생성합니다
             data = {
                 'access': {
                     'token': str(refresh.access_token),
@@ -59,9 +67,15 @@ class TokenRefreshSerializer(TokenRefreshSerializer):
                         '%Y-%m-%d %H:%M:%S')
                 }
             }
+
             return data
-        except Exception as e:
+
+        except TokenError as e:
+            logger.error(f"Token validation error: {str(e)}")
             raise serializers.ValidationError('유효하지 않은 토큰입니다')
+        except Exception as e:
+            logger.error(f"Unexpected error during token refresh: {str(e)}")
+            raise serializers.ValidationError('토큰 갱신 중 오류가 발생했습니다')
 
 class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
