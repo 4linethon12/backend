@@ -46,7 +46,18 @@ INSTALLED_APPS = [
     'users',
     'groups',
     'manito',
+    'drf_yasg',
 ]
+
+SWAGGER_SETTINGS = {
+    'USE_SESSION_AUTH': False,
+    'JSON_EDITOR': True,
+    'SHOW_REQUEST_HEADERS': True,
+    'VALIDATOR_URL': None,
+}
+
+LOGIN_URL = 'rest_framework:login'
+LOGOUT_URL = 'rest_framework:logout'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
