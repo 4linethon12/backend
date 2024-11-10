@@ -3,7 +3,8 @@ from .models import Group, RecommendedMission
 from users.serializers import UserSerializer  
 
 class GroupSerializer(serializers.ModelSerializer):
-    group_leader = UserSerializer(read_only=True)  
+    group_leader = UserSerializer(read_only=True)
+    code = serializers.CharField(read_only=True)
 
     class Meta:
         model = Group
