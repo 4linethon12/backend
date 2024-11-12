@@ -7,6 +7,14 @@ from .serializers import GroupSerializer, RecommendedMissionSerializer, GroupPar
 from django.shortcuts import get_object_or_404
 import random
 
+class GroupViewSet(viewsets.ModelViewSet):
+    queryset = Group.objects.all()
+    serializer_class = GroupSerializer
+
+    def perform_create(self, serializer):
+    
+        serializer.save(group_leader=self.request.user)
+
 class GroupJoinView(APIView):
     def post(self, request, code):
         group = get_object_or_404(Group, code=code)
