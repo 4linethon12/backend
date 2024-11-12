@@ -1,6 +1,7 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
 from .models import Group, RecommendedMission, GroupParticipant
 from .serializers import GroupSerializer, RecommendedMissionSerializer, GroupParticipantSerializer
 from django.shortcuts import get_object_or_404
@@ -29,4 +30,14 @@ class RecommendedMissionViewSet(viewsets.ViewSet):
         missions = RecommendedMission.objects.all()
         random_missions = random.sample(list(missions), 5)
         serializer = RecommendedMissionSerializer(random_missions, many=True)
+        return Response(serializer.data)
+    
+class UserGroupsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user_groups = GroupParticipant.objects.filter(user=request.user).select_related('group')
+        groups = [participant.group for participant in user_groups]
+        
+        serializer = GroupSerializer(groups, many=True)
         return Response(serializer.data)
