@@ -12,8 +12,10 @@ class GroupViewSet(viewsets.ModelViewSet):
     serializer_class = GroupSerializer
 
     def perform_create(self, serializer):
-    
-        serializer.save(group_leader=self.request.user)
+
+        group = serializer.save(group_leader=self.request.user)
+        GroupParticipant.objects.create(user=self.request.user, group=group)
+
 
 class GroupJoinView(APIView):
     def post(self, request, code):
