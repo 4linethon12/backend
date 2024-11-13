@@ -9,4 +9,4 @@ class ManitoMessageSerializer(serializers.ModelSerializer):
 class ManitoMatchSerializer(serializers.ModelSerializer):
     class Meta:
         model = ManitoMatch
-        fields = ['group', 'giver', 'receiver']
+        fields = ['id', 'group', 'giver', 'receiver']

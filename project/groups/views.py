@@ -142,6 +142,49 @@ class RecommendedMissionViewSet(viewsets.ViewSet):
 class UserGroupsView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @swagger_auto_schema(
+        operation_summary="유저 그룹 조회",
+        operation_description="유저의 그룹을 조회합니다",
+        manual_parameters=[
+            openapi.Parameter(
+                'Authorization',
+                openapi.IN_HEADER,
+                description='Bearer {JWT_TOKEN}',
+                type=openapi.TYPE_STRING,
+                required=True
+            )
+        ],
+        responses={
+            status.HTTP_200_OK: openapi.Schema(
+                type=openapi.TYPE_ARRAY,
+                items=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='그룹 ID'),
+                        'name': openapi.Schema(type=openapi.TYPE_STRING, description='그룹명'),
+                        'code': openapi.Schema(type=openapi.TYPE_STRING, description='그룹 코드'),
+                        'group_leader': openapi.Schema(
+                            type=openapi.TYPE_OBJECT,
+                            properties={
+                                'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='그룹장 User ID'),
+                                'nickname': openapi.Schema(type=openapi.TYPE_STRING, description='그룹장 닉네임'),
+                            }
+                        ),
+                        'missions': openapi.Schema(
+                            type=openapi.TYPE_ARRAY,
+                            items=openapi.Schema(type=openapi.TYPE_OBJECT)
+                        ),
+                    }
+                )
+            ),
+            status.HTTP_400_BAD_REQUEST: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'error': openapi.Schema(type=openapi.TYPE_STRING, description='에러 메시지'),
+                }
+            )
+        }
+    )
     def get(self, request):
         user_groups = GroupParticipant.objects.filter(user=request.user).select_related('group')
         groups = [participant.group for participant in user_groups]
