@@ -37,6 +37,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         refresh_expire = datetime.fromtimestamp(refresh.payload['exp']).strftime('%Y-%m-%d %H:%M:%S')
 
         data = {
+            'id': user.id,
             'nickname': user.nickname,
             'access': {
                 'token': str(access),
