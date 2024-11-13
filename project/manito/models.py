@@ -9,5 +9,13 @@ class ManitoMatch(models.Model):
 
 class ManitoMessage(models.Model):
     match = models.ForeignKey(ManitoMatch, on_delete=models.CASCADE)
-    hint = models.TextField()
-    letter = models.TextField()
+    hint = models.TextField(blank=True, null=True)  
+    letter = models.TextField(blank=True, null=True)  
+    
+    @property
+    def giver(self):
+        return self.match.giver
+
+    @property
+    def receiver(self):
+        return self.match.receiver
