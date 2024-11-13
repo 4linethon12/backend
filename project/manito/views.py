@@ -1,6 +1,8 @@
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import viewsets, status
+from rest_framework.permissions import IsAuthenticated
+
 from .models import ManitoMatch, ManitoMessage
 from .serializers import ManitoMessageSerializer, ManitoMatchSerializer
 from groups.models import Group, GroupParticipant
@@ -53,6 +55,7 @@ class ManitoMessageViewSet(viewsets.ModelViewSet):
         }
     )
     def create(self, request, *args, **kwargs):
+        self.permission_classes = [IsAuthenticated]
         serializer = self.get_serializer(data=request.data)
 
         if serializer.is_valid():
@@ -108,6 +111,7 @@ class CreateManitoMatchView(APIView):
         }
     )
     def post(self, request, group_id):
+        self.permission_classes = [IsAuthenticated]
         try:
             group = Group.objects.get(id=group_id)
             users = list(User.objects.filter(id__in=GroupParticipant.objects.filter(group=group).values_list('user_id', flat=True)))

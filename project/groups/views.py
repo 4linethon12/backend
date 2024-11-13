@@ -3,7 +3,7 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from .models import Group, RecommendedMission, GroupParticipant
 from .serializers import GroupSerializer, RecommendedMissionSerializer, GroupParticipantSerializer
 from django.shortcuts import get_object_or_404
@@ -12,7 +12,6 @@ import random
 class GroupViewSet(viewsets.ModelViewSet):
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
-    permission_classes = [IsAuthenticated]
 
     @swagger_auto_schema(
         operation_summary="그룹생성/작업완료",
@@ -71,6 +70,7 @@ class GroupViewSet(viewsets.ModelViewSet):
         }
     )
     def create(self, request, *args, **kwargs):
+        self.permission_classes = [IsAuthenticated]
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             self.perform_create(serializer)
@@ -81,6 +81,20 @@ class GroupViewSet(viewsets.ModelViewSet):
             }
             return Response(response_data, status=status.HTTP_201_CREATED)
         return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+    @swagger_auto_schema(
+        operation_summary="그룹상세/작업완료",
+        operation_description="그룹을 상세를 확인합니다.",
+        responses={
+            200: GroupSerializer,
+            404: "Not Found"
+        }
+    )
+    def retrieve(self, request, pk=None):
+        self.permission_classes = [AllowAny]
+        group = get_object_or_404(self.get_queryset(), pk=pk)
+        serializer = self.get_serializer(group)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def perform_create(self, serializer):
 
@@ -117,6 +131,7 @@ class GroupJoinView(APIView):
         }
     )
     def post(self, request, code):
+        self.permission_classes = [IsAuthenticated]
         group = get_object_or_404(Group, code=code)
         
         if GroupParticipant.objects.filter(user=request.user, group=group).exists():
@@ -134,7 +149,7 @@ class GroupJoinView(APIView):
 
 class RecommendedMissionViewSet(viewsets.ViewSet):
     def list(self, request):
-
+        self.permission_classes = [AllowAny]
         missions = RecommendedMission.objects.all()
         random_missions = random.sample(list(missions), 5)
         serializer = RecommendedMissionSerializer(random_missions, many=True)
@@ -187,6 +202,7 @@ class UserGroupsView(APIView):
         }
     )
     def get(self, request):
+        self.permission_classes = [IsAuthenticated]
         user_groups = GroupParticipant.objects.filter(user=request.user).select_related('group')
         groups = [participant.group for participant in user_groups]
         
