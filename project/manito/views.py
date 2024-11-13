@@ -3,7 +3,7 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework import viewsets, status
 from .models import ManitoMatch, ManitoMessage
 from .serializers import ManitoMessageSerializer, ManitoMatchSerializer
-from groups.models import Group
+from groups.models import Group, GroupParticipant
 from users.models import User
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -43,7 +43,7 @@ class CreateManitoMatchView(APIView):
     def post(self, request, group_id):
         try:
             group = Group.objects.get(id=group_id)
-            users = list(User.objects.filter(led_groups=group))
+            users = list(User.objects.filter(id__in=GroupParticipant.objects.filter(group=group).values_list('user_id', flat=True)))
 
             if len(users) < 2:
                 return Response({"error": "Not enough users in the group to create pairs."},

@@ -89,6 +89,15 @@ class GroupJoinView(APIView):
     @swagger_auto_schema(
         operation_summary="그룹참여",
         operation_description="그룹에 참여합니다.",
+        manual_parameters=[
+            openapi.Parameter(
+                'Authorization',
+                openapi.IN_HEADER,
+                description='Bearer {JWT_TOKEN}',
+                type=openapi.TYPE_STRING,
+                required=True
+            )
+        ],
         responses={
             status.HTTP_200_OK: openapi.Schema(
                 type=openapi.TYPE_OBJECT,
