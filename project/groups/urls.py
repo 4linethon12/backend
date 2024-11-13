@@ -2,10 +2,10 @@ from django.urls import path
 from rest_framework.routers import DefaultRouter
 
 from manito.views import CreateManitoMatchView
-from .views import GroupJoinView, RecommendedMissionViewSet, UserGroupsView
+from .views import GroupJoinView, RecommendedMissionViewSet, UserGroupsView, GroupViewSet
 
 router = DefaultRouter()
-router.register(r'groups', GroupJoinView)
+router.register(r'groups', GroupViewSet)
 router.register(r'recommended-missions', RecommendedMissionViewSet, basename='recommended-missions')
 
 urlpatterns = [
