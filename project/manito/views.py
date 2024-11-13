@@ -136,7 +136,7 @@ class ManitoMessageViewSet(viewsets.ModelViewSet):
             )
         ],
     )
-    @action(detail=False, methods=['get'], url_path='for-giver/')
+    @action(detail=False, methods=['get'], url_path='for-giver')
     def list_for_giver(self, request):
         match = ManitoMatch.objects.filter(giver=request.user)
         giver_messages = ManitoMessage.objects.filter(match__in=match)
