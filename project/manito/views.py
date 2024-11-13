@@ -17,7 +17,7 @@ class ManitoMessageViewSet(viewsets.ModelViewSet):
 
 class CreateManitoMatchView(APIView):
     @swagger_auto_schema(
-        operation_summary="마니또 매칭",
+        operation_summary="마니또 매칭/작업완료",
         operation_description="마니또를 랜덤으로 매칭합니다.",
         responses={
             status.HTTP_200_OK: openapi.Schema(
