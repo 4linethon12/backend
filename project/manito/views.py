@@ -2,6 +2,7 @@ from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import action
 
 from .models import ManitoMatch, ManitoMessage
 from .serializers import ManitoMessageSerializer, ManitoMatchSerializer
@@ -15,6 +16,7 @@ import random
 class ManitoMessageViewSet(viewsets.ModelViewSet):
     queryset = ManitoMessage.objects.all()
     serializer_class = ManitoMessageSerializer
+    permission_classes = [IsAuthenticated]
 
     @swagger_auto_schema(
         operation_summary="메세지 작성/작업완료",
@@ -60,21 +62,18 @@ class ManitoMessageViewSet(viewsets.ModelViewSet):
 
         if serializer.is_valid():
             manito_message = serializer.save()
-            # Custom response format
             response_data = {
                 "status": "success",
                 "message": "Message created successfully",
                 "data": {
                     "id": manito_message.id,
                     "match": manito_message.match_id,
-                    # Assuming this is how the `match` field is represented in the model
                     "hint": manito_message.hint,
                     "letter": manito_message.letter
                 }
             }
             return Response(response_data, status=status.HTTP_201_CREATED)
 
-        # Error response if the serializer is invalid
         return Response({
             "status": "error",
             "message": "Bad request",
@@ -83,6 +82,45 @@ class ManitoMessageViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save()
+
+    @swagger_auto_schema(
+        operation_summary="그룹별 메시지 조회",
+        operation_description="특정 그룹의 모든 마니또 메시지를 조회합니다.",
+        manual_parameters=[
+            openapi.Parameter(
+                'group_id',
+                openapi.IN_PATH,
+                description='메시지를 조회할 그룹 ID',
+                type=openapi.TYPE_INTEGER,
+                required=True
+            ),
+            openapi.Parameter(
+                'Authorization',
+                openapi.IN_HEADER,
+                description='Bearer {JWT_TOKEN}',
+                type=openapi.TYPE_STRING,
+                required=True
+            )
+        ],
+        responses={
+            status.HTTP_200_OK: openapi.Response(
+                description="성공적으로 그룹 메시지 조회 완료",
+                schema=ManitoMessageSerializer(many=True)
+            ),
+            status.HTTP_404_NOT_FOUND: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'error': openapi.Schema(type=openapi.TYPE_STRING, description='에러 메시지'),
+                }
+            )
+        }
+    )
+    @action(detail=False, methods=['get'], url_path='group/(?P<group_id>[^/.]+)')
+    def list_by_group(self, request, group_id=None):
+        # 특정 그룹의 메시지를 필터링
+        messages = ManitoMessage.objects.filter(match__group_id=group_id)
+        serializer = self.get_serializer(messages, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class CreateManitoMatchView(APIView):
