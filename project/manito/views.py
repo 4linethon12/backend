@@ -2,6 +2,7 @@ from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import action
 
 from .models import ManitoMatch, ManitoMessage
 from .serializers import ManitoMessageSerializer, ManitoMatchSerializer
@@ -56,33 +57,91 @@ class ManitoMessageViewSet(viewsets.ModelViewSet):
     )
     def create(self, request, *args, **kwargs):
         self.permission_classes = [IsAuthenticated]
-        serializer = self.get_serializer(data=request.data)
+        role = request.query_params.get('role')
+    
+        if role != 'giver':
+            return Response({"error": "giver만 메세지를 생성할 수 있습니다."}, status=status.HTTP_403_FORBIDDEN)
 
-        if serializer.is_valid():
-            manito_message = serializer.save()
-            # Custom response format
-            response_data = {
-                "status": "success",
-                "message": "Message created successfully",
-                "data": {
-                    "id": manito_message.id,
-                    "match": manito_message.match_id,
-                    # Assuming this is how the `match` field is represented in the model
-                    "hint": manito_message.hint,
-                    "letter": manito_message.letter
-                }
+        match_id = request.data.get('match')
+        match = ManitoMatch.objects.filter(id=match_id).first()
+        if not match:
+            return Response({"error": "유효하지 않은 match ID 입니다."}, status=status.HTTP_400_BAD_REQUEST)
+
+        manito_message = ManitoMessage.objects.create(
+            match=match,
+            hint=request.data.get('hint', ''),
+            letter=request.data.get('letter', ''),
+            giver=request.user,
+            receiver=match.receiver
+        )
+
+        response_data = {
+            "status": "success",
+            "message": "메세지가 성공적으로 생성되었습니다!",
+            "data": {
+                "id": manito_message.id,
+                "match": manito_message.match_id,
+                "hint": manito_message.hint,
+                "letter": manito_message.letter
             }
-            return Response(response_data, status=status.HTTP_201_CREATED)
+        }
+        return Response(response_data, status=status.HTTP_201_CREATED)
 
-        # Error response if the serializer is invalid
-        return Response({
-            "status": "error",
-            "message": "Bad request",
-            "errors": serializer.errors
-        }, status=status.HTTP_400_BAD_REQUEST)
 
     def perform_create(self, serializer):
         serializer.save()
+
+    @swagger_auto_schema(
+        operation_summary="그룹별 메시지 조회/작업",
+        operation_description="특정 그룹의 모든 마니또 메시지를 조회합니다.",
+        manual_parameters=[
+            openapi.Parameter(
+                'group_id',
+                openapi.IN_PATH,
+                description='메시지를 조회할 그룹 ID',
+                type=openapi.TYPE_INTEGER,
+                required=True
+            ),
+        ],
+        responses={
+            status.HTTP_200_OK: openapi.Response(
+                description="성공적으로 그룹 메시지 조회 완료",
+                schema=ManitoMessageSerializer(many=True)
+            ),
+            status.HTTP_404_NOT_FOUND: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'error': openapi.Schema(type=openapi.TYPE_STRING, description='에러 메시지'),
+                }
+            )
+        }
+    )
+    @action(detail=False, methods=['get'], url_path='group/(?P<group_id>[^/.]+)')
+    def list_by_group(self, request, group_id=None):
+        # 특정 그룹의 메시지를 필터링
+        messages = ManitoMessage.objects.filter(match__group_id=group_id)
+        serializer = self.get_serializer(messages, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    @swagger_auto_schema(
+        operation_summary="Giver 입장에서 메시지 조회",
+        operation_description="Giver가 receiver에게 작성한 메시지를 조회합니다.",
+    )
+    @action(detail=False, methods=['get'], url_path='for-giver')
+    def list_for_giver(self, request):
+        giver_messages = ManitoMessage.objects.filter(giver=request.user)
+        serializer = self.get_serializer(giver_messages, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @swagger_auto_schema(
+        operation_summary="Receiver 입장에서 메시지 조회",
+        operation_description="Receiver가 giver로부터 받은 메시지를 조회합니다.",
+    )
+    @action(detail=False, methods=['get'], url_path='for-receiver')
+    def list_for_receiver(self, request):
+        receiver_messages = ManitoMessage.objects.filter(receiver=request.user)
+        serializer = self.get_serializer(receiver_messages, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class CreateManitoMatchView(APIView):

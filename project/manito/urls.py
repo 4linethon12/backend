@@ -1,7 +1,10 @@
 from rest_framework.routers import DefaultRouter
 from .views import ManitoMessageViewSet
+from django.urls import path
 
 router = DefaultRouter()
-router.register(r'messages', ManitoMessageViewSet)  # 명확한 URL 패턴 지정
+router.register(r'messages', ManitoMessageViewSet)
 
-urlpatterns = router.urls
+urlpatterns = [
+    path('messages/group/<int:group_id>/', ManitoMessageViewSet.as_view({'get': 'list_by_group'}), name='group-messages')
+] + router.urls
