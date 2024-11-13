@@ -14,10 +14,77 @@ class ManitoMessageViewSet(viewsets.ModelViewSet):
     queryset = ManitoMessage.objects.all()
     serializer_class = ManitoMessageSerializer
 
+    @swagger_auto_schema(
+        operation_summary="메세지 작성/작업완료",
+        operation_description="마니또 메세지를 작성합니다.",
+        manual_parameters=[
+            openapi.Parameter(
+                'Authorization',
+                openapi.IN_HEADER,
+                description='Bearer {JWT_TOKEN}',
+                type=openapi.TYPE_STRING,
+                required=True
+            )
+        ],
+        request_body=ManitoMessageSerializer,
+        responses={
+            status.HTTP_200_OK: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'status': openapi.Schema(type=openapi.TYPE_STRING, description='성공 여부'),
+                    'message': openapi.Schema(type=openapi.TYPE_STRING, description='응답 메시지'),
+                    'data': openapi.Schema(
+                        type=openapi.TYPE_OBJECT,
+                        properties={
+                            'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='메세지 ID'),
+                            'match': openapi.Schema(type=openapi.TYPE_STRING, description='매칭 ID'),
+                            'hint': openapi.Schema(type=openapi.TYPE_STRING, description='힌트'),
+                            'letter': openapi.Schema(type=openapi.TYPE_STRING, description='내용'),
+                        }
+                    ),
+                }
+            ),
+            status.HTTP_400_BAD_REQUEST: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'error': openapi.Schema(type=openapi.TYPE_STRING, description='에러 메시지'),
+                }
+            )
+        }
+    )
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+
+        if serializer.is_valid():
+            manito_message = serializer.save()
+            # Custom response format
+            response_data = {
+                "status": "success",
+                "message": "Message created successfully",
+                "data": {
+                    "id": manito_message.id,
+                    "match": manito_message.match_id,
+                    # Assuming this is how the `match` field is represented in the model
+                    "hint": manito_message.hint,
+                    "letter": manito_message.letter
+                }
+            }
+            return Response(response_data, status=status.HTTP_201_CREATED)
+
+        # Error response if the serializer is invalid
+        return Response({
+            "status": "error",
+            "message": "Bad request",
+            "errors": serializer.errors
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    def perform_create(self, serializer):
+        serializer.save()
+
 
 class CreateManitoMatchView(APIView):
     @swagger_auto_schema(
-        operation_summary="마니또 매칭",
+        operation_summary="마니또 매칭/작업완료",
         operation_description="마니또를 랜덤으로 매칭합니다.",
         responses={
             status.HTTP_200_OK: openapi.Schema(

@@ -23,7 +23,7 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
 
     @swagger_auto_schema(
-        operation_summary="사용자 목록 조회",
+        operation_summary="사용자 목록 조회/작업완료",
         operation_description="모든 사용자의 정보를 조회합니다.",
         responses={
             200: UserSerializer(many=True),
@@ -34,7 +34,7 @@ class UserViewSet(viewsets.ModelViewSet):
         return super().list(request, *args, **kwargs)
 
     @swagger_auto_schema(
-        operation_summary="사용자 상세 정보 조회",
+        operation_summary="사용자 상세 정보 조회/작업완료",
         operation_description="특정 사용자의 상세 정보를 조회합니다.",
         responses={
             200: UserSerializer(),
@@ -49,7 +49,7 @@ class LoginView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
 
     @swagger_auto_schema(
-        operation_summary="로그인",
+        operation_summary="로그인/작업완료",
         operation_description="닉네임과 비밀번호로 로그인하여 JWT 토큰을 발급받습니다.",
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
@@ -86,7 +86,7 @@ class LoginView(TokenObtainPairView):
 
 class RegisterView(APIView):
     @swagger_auto_schema(
-        operation_summary="회원가입",
+        operation_summary="회원가입/작업완료",
         operation_description="새로운 사용자를 등록합니다.",
         request_body=RegisterSerializer,
         responses={
@@ -105,7 +105,7 @@ class TokenRefreshViewCustom(TokenRefreshView):
     serializer_class = TokenRefreshSerializer
 
     @swagger_auto_schema(
-        operation_summary="토큰 갱신",
+        operation_summary="토큰 갱신/작업완료",
         operation_description="리프레시 토큰을 사용하여 새로운 액세스 토큰을 발급받습니다.",
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
