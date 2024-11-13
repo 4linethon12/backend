@@ -131,6 +131,7 @@ class GroupJoinView(APIView):
         }
     )
     def post(self, request, code):
+        self.permission_classes = [IsAuthenticated]
         group = get_object_or_404(Group, code=code)
         
         if GroupParticipant.objects.filter(user=request.user, group=group).exists():
@@ -148,7 +149,7 @@ class GroupJoinView(APIView):
 
 class RecommendedMissionViewSet(viewsets.ViewSet):
     def list(self, request):
-
+        self.permission_classes = [AllowAny]
         missions = RecommendedMission.objects.all()
         random_missions = random.sample(list(missions), 5)
         serializer = RecommendedMissionSerializer(random_missions, many=True)
@@ -201,6 +202,7 @@ class UserGroupsView(APIView):
         }
     )
     def get(self, request):
+        self.permission_classes = [IsAuthenticated]
         user_groups = GroupParticipant.objects.filter(user=request.user).select_related('group')
         groups = [participant.group for participant in user_groups]
         
