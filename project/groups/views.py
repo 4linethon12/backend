@@ -82,8 +82,10 @@ class GroupViewSet(viewsets.ModelViewSet):
         return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
     def perform_create(self, serializer):
-    
-        serializer.save(group_leader=self.request.user)
+
+        group = serializer.save(group_leader=self.request.user)
+        GroupParticipant.objects.create(user=self.request.user, group=group)
+
 
 class GroupJoinView(APIView):
     @swagger_auto_schema(
