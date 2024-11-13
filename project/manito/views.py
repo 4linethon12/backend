@@ -122,6 +122,26 @@ class ManitoMessageViewSet(viewsets.ModelViewSet):
         messages = ManitoMessage.objects.filter(match__group_id=group_id)
         serializer = self.get_serializer(messages, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    @swagger_auto_schema(
+        operation_summary="Giver 입장에서 메시지 조회",
+        operation_description="Giver가 receiver에게 작성한 메시지를 조회합니다.",
+    )
+    @action(detail=False, methods=['get'], url_path='for-giver')
+    def list_for_giver(self, request):
+        giver_messages = ManitoMessage.objects.filter(giver=request.user)
+        serializer = self.get_serializer(giver_messages, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @swagger_auto_schema(
+        operation_summary="Receiver 입장에서 메시지 조회",
+        operation_description="Receiver가 giver로부터 받은 메시지를 조회합니다.",
+    )
+    @action(detail=False, methods=['get'], url_path='for-receiver')
+    def list_for_receiver(self, request):
+        receiver_messages = ManitoMessage.objects.filter(receiver=request.user)
+        serializer = self.get_serializer(receiver_messages, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class CreateManitoMatchView(APIView):
