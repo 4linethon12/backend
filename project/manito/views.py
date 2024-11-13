@@ -3,7 +3,7 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
-
+from django.shortcuts import get_object_or_404
 from .models import ManitoMatch, ManitoMessage
 from .serializers import ManitoMessageSerializer, ManitoMatchSerializer
 from groups.models import Group, GroupParticipant
@@ -126,20 +126,51 @@ class ManitoMessageViewSet(viewsets.ModelViewSet):
     @swagger_auto_schema(
         operation_summary="Giver 입장에서 메시지 조회",
         operation_description="Giver가 receiver에게 작성한 메시지를 조회합니다.",
+        manual_parameters=[
+            openapi.Parameter(
+                'Authorization',
+                openapi.IN_HEADER,
+                description='Bearer {JWT_TOKEN}',
+                type=openapi.TYPE_STRING,
+                required=True
+            )
+        ],
     )
-    @action(detail=False, methods=['get'], url_path='for-giver')
+    @action(detail=False, methods=['get'], url_path='for-giver/')
     def list_for_giver(self, request):
-        giver_messages = ManitoMessage.objects.filter(giver=request.user)
+        match = ManitoMatch.objects.filter(giver=request.user)
+        giver_messages = ManitoMessage.objects.filter(match__in=match)
         serializer = self.get_serializer(giver_messages, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
         operation_summary="Receiver 입장에서 메시지 조회",
         operation_description="Receiver가 giver로부터 받은 메시지를 조회합니다.",
+        manual_parameters=[
+            openapi.Parameter(
+                'Authorization',
+                openapi.IN_HEADER,
+                description='Bearer {JWT_TOKEN}',
+                type=openapi.TYPE_STRING,
+                required=True
+            ),
+            openapi.Parameter(
+                'group_id',
+                openapi.IN_PATH,
+                description='메시지를 조회할 그룹 ID',
+                type=openapi.TYPE_INTEGER,
+                required=True
+            ),
+        ],
     )
-    @action(detail=False, methods=['get'], url_path='for-receiver')
-    def list_for_receiver(self, request):
-        receiver_messages = ManitoMessage.objects.filter(receiver=request.user)
+    @action(detail=False, methods=['get'], url_path='for-receiver/(?P<group_id>[^/.]+)')
+    def list_for_receiver(self, request, group_id=None):
+        group = get_object_or_404(Group, id=group_id)
+        participant = GroupParticipant.objects.filter(group=group, user=request.user)
+        if not participant:
+            return Response({"error": "그룹에 유저가 존재하지 않습니다."}, status=status.HTTP_400_BAD_REQUEST)
+        match = ManitoMatch.objects.filter(group=group, receiver=request.user)
+        receiver_messages = ManitoMessage.objects.filter(match__in=match)
         serializer = self.get_serializer(receiver_messages, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
