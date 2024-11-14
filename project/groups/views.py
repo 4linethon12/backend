@@ -12,6 +12,7 @@ import random
 class GroupViewSet(viewsets.ModelViewSet):
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
+    pagination_class = None
 
     @swagger_auto_schema(
         operation_summary="그룹생성/작업완료",

@@ -16,6 +16,7 @@ import random
 class ManitoMessageViewSet(viewsets.ModelViewSet):
     queryset = ManitoMessage.objects.all()
     serializer_class = ManitoMessageSerializer
+    pagination_class = None
 
     @swagger_auto_schema(
         operation_summary="메세지 작성/작업완료",

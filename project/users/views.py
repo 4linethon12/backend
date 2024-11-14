@@ -21,6 +21,7 @@ logger = logging.getLogger(__name__)
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+    pagination_class = None
 
     @swagger_auto_schema(
         operation_summary="사용자 목록 조회/작업완료",
