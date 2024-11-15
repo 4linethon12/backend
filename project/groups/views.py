@@ -28,10 +28,9 @@ class GroupViewSet(viewsets.ModelViewSet):
         ],
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
-            required=['name', 'group_leader'],
+            required=['name', 'mission'],
             properties={
                 'name': openapi.Schema(type=openapi.TYPE_STRING, description='그룹명'),
-                'group_leader': openapi.Schema(type=openapi.TYPE_INTEGER, description='그룹장 User ID'),
                 'mission': openapi.Schema(type=openapi.TYPE_STRING, description='미션내용'),
             },
         ),
