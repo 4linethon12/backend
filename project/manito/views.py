@@ -58,12 +58,16 @@ class ManitoMessageViewSet(viewsets.ModelViewSet):
     )
     def create(self, request, *args, **kwargs):
         self.permission_classes = [IsAuthenticated]
-        role = request.query_params.get('role')
-    
-        if role != 'giver':
+        match_id = request.data.get('match')
+
+        match = get_object_or_404(ManitoMatch, id=match_id)
+
+        if not match:
+            return Response({"error": "유효하지 않은 match ID 입니다."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if request.user.id != match.giver.id:
             return Response({"error": "giver만 메세지를 생성할 수 있습니다."}, status=status.HTTP_403_FORBIDDEN)
 
-        match_id = request.data.get('match')
         match = ManitoMatch.objects.filter(id=match_id).first()
         if not match:
             return Response({"error": "유효하지 않은 match ID 입니다."}, status=status.HTTP_400_BAD_REQUEST)
@@ -72,8 +76,6 @@ class ManitoMessageViewSet(viewsets.ModelViewSet):
             match=match,
             hint=request.data.get('hint', ''),
             letter=request.data.get('letter', ''),
-            giver=request.user,
-            receiver=match.receiver
         )
 
         response_data = {
@@ -83,7 +85,9 @@ class ManitoMessageViewSet(viewsets.ModelViewSet):
                 "id": manito_message.id,
                 "match": manito_message.match_id,
                 "hint": manito_message.hint,
-                "letter": manito_message.letter
+                "letter": manito_message.letter,
+                "giver": match.giver.id,
+                "receiver": match.receiver.id,
             }
         }
         return Response(response_data, status=status.HTTP_201_CREATED)
