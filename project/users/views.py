@@ -1,3 +1,4 @@
+from datetime import datetime
 import logging
 
 from rest_framework import viewsets, status, serializers
@@ -6,6 +7,7 @@ from drf_yasg import openapi
 from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import User
 from .serializers import UserSerializer, CustomTokenObtainPairSerializer, TokenRefreshSerializer, RegisterSerializer
@@ -99,7 +101,26 @@ class RegisterView(APIView):
         serializer = RegisterSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
-            return Response(UserSerializer(user).data, status=201)
+            refresh = RefreshToken.for_user(user)
+            access = refresh.access_token
+
+            access_expire = datetime.fromtimestamp(access.payload['exp']).strftime('%Y-%m-%d %H:%M:%S')
+            refresh_expire = datetime.fromtimestamp(refresh.payload['exp']).strftime('%Y-%m-%d %H:%M:%S')
+
+            # 응답 데이터 구성
+            response_data = {
+                'id': user.id,
+                'nickname': user.nickname,
+                'access': {
+                    'token': str(access),
+                    'expires_at': access_expire,
+                },
+                'refresh': {
+                    'token': str(refresh),
+                    'expires_at': refresh_expire,
+                },
+            }
+            return Response(response_data, status=201)
         return Response(serializer.errors, status=400)
 
 class TokenRefreshViewCustom(TokenRefreshView):
