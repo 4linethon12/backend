@@ -6,7 +6,6 @@ class Group(models.Model):
     name = models.CharField(max_length=100)
     code = models.CharField(max_length=6, unique=True)
     mission = models.TextField(blank=True, null=True)
-    group_leader = models.ForeignKey(User, on_delete=models.CASCADE, related_name="led_groups",  null=True, blank=True)
 
     @staticmethod
     def generate_code():
@@ -24,6 +23,7 @@ class GroupParticipant(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     group = models.ForeignKey(Group, on_delete=models.CASCADE)
     joined_at = models.DateTimeField(auto_now_add=True)
+    is_leader = models.BooleanField(default=False)
 
     class Meta:
         unique_together = ('user', 'group')
