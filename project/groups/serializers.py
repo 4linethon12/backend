@@ -10,17 +10,17 @@ class RecommendedMissionSerializer(serializers.ModelSerializer):
 
 class GroupParticipantSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
+    is_leader = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = GroupParticipant
-        fields = ['id', 'user', 'joined_at']
+        fields = ['id', 'user', 'joined_at', 'is_leader']
 
 class GroupSerializer(serializers.ModelSerializer):
-    group_leader = UserSerializer(read_only=True)
     code = serializers.CharField(read_only=True)
     participants = GroupParticipantSerializer(many=True, read_only=True, source='groupparticipant_set')
     matches = ManitoMatchSerializer(many=True, read_only=True, source='manitomatch_set')
 
     class Meta:
         model = Group
-        fields = ['id', 'name', 'code', 'mission', 'group_leader', 'participants', 'matches']
+        fields = ['id', 'name', 'code', 'mission', 'participants', 'matches']

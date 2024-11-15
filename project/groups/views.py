@@ -72,9 +72,13 @@ class GroupViewSet(viewsets.ModelViewSet):
     )
     def create(self, request, *args, **kwargs):
         self.permission_classes = [IsAuthenticated]
+        if GroupParticipant.objects.filter(user=request.user).exists():
+            return Response({'error': '이미 그룹에 참여하고 있습니다.'}, status=status.HTTP_400_BAD_REQUEST)
+        
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
-            self.perform_create(serializer)
+            group = serializer.save()
+            GroupParticipant.objects.create(user=request.user, group=group, is_leader=True)
             response_data = {
                 'status': 'success',
                 'message': 'Group created successfully',
@@ -133,16 +137,14 @@ class GroupJoinView(APIView):
     )
     def post(self, request, code):
         self.permission_classes = [IsAuthenticated]
-        group = get_object_or_404(Group, code=code)
-        
-        if GroupParticipant.objects.filter(user=request.user, group=group).exists():
-            return Response({"error": "이미 그룹에 참여하셨습니다."}, status=status.HTTP_400_BAD_REQUEST)
+        if GroupParticipant.objects.filter(user=request.user).exists():
+            return Response({"error": "이미 다른 그룹에 참여하고 있습니다."}, status=status.HTTP_400_BAD_REQUEST)
 
+        group = get_object_or_404(Group, code=code)
         GroupParticipant.objects.create(user=request.user, group=group)
         
         participants = GroupParticipant.objects.filter(group=group)
         participant_serializer = GroupParticipantSerializer(participants, many=True)
-        
         return Response({
             "message": "그룹에 참여했습니다.",
             "participants": participant_serializer.data
@@ -203,9 +205,9 @@ class UserGroupsView(APIView):
         }
     )
     def get(self, request):
-        self.permission_classes = [IsAuthenticated]
-        user_groups = GroupParticipant.objects.filter(user=request.user).select_related('group')
-        groups = [participant.group for participant in user_groups]
-        
+        self.permission_classes = [IsAuthenticated]  
+        user_groups = GroupParticipant.objects.filter(user=request.user).select_related('group')  
+        groups = [participant.group for participant in user_groups]  
+
         serializer = GroupSerializer(groups, many=True)
         return Response(serializer.data)
